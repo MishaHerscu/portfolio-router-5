@@ -1,9 +1,9 @@
 'use strict';
 
-const example = require('../assets/scripts/example');
+const router = require('../assets/scripts/router');
 
-describe('Example', function () {
+describe('Router', function () {
   it('is true', function () {
-    expect(example).toBe(true);
+    expect(router).toBe(true);
   });
 });
