@@ -4,7 +4,7 @@ $icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
 $background-color: #74afad;
 $white-background: #fff;
 $main-text-color: #eee;
-$dark-text-color: #000;
+$dark-text-color: #777;
 
 nav {
   padding: 10px;
@@ -23,9 +23,9 @@ div {
   background-color: $white-background;
   border-radius: 20px;
   color: $dark-text-color;
-  margin: 20%;
+  margin: 10%;
   padding: 20px;
-  width: 60%;
+  width: 80%;
 }
 
 h1 {

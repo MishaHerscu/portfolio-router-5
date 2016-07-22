@@ -2,31 +2,27 @@
 
 const Router5 = require('router5').default;
 const loggerPlugin = require('router5').loggerPlugin();
-// const historyPlugin = require('router5-history').default();
+const historyPlugin = require('router5-history').default();
 
 const routes = [
   { name: 'index', path: '/' },
-  { name: 'oneSection', path: '/oneSection' },
-  { name: 'twoSection', path: '/twoSection' },
-  { name: 'threeSection', path: '/threeSection' },
-  { name: 'fourSection', path: '/fourSection' },
+  { name: 'About-Me', path: '/About-Me' },
+  { name: 'Projects', path: '/Projects' },
+  { name: 'Stuff', path: '/Stuff' },
+  { name: 'kthxbai', path: '/kthxbai' },
 ];
 
 const options = {
   useHash: true,
   hashPrefix: '!',
-  defaultRoute: 'home',
-  defaultParams: {},
-  base: '',
-  trailingSlash: false,
-  autoCleanUp: true,
-  strictQueryParams: true
+  defaultRoute: '/',
 };
 
 const router = new Router5(routes, options)
   .usePlugin(loggerPlugin)
-  // .usePlugin(historyPlugin)
+  .usePlugin(historyPlugin)
   ;
+
 // const paths = [
 //   '#about',
 //   '#work',
