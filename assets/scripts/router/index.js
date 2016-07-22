@@ -1,8 +1,11 @@
 'use strict';
 
-const Router5 = require('router5');
+const Router5 = require('router5').default;
+const loggerPlugin = require('router5').loggerPlugin();
+// const historyPlugin = require('router5-history').default();
 
 const routes = [
+  { name: 'index', path: '/' },
   { name: 'oneSection', path: '/oneSection' },
   { name: 'twoSection', path: '/twoSection' },
   { name: 'threeSection', path: '/threeSection' },
@@ -20,8 +23,10 @@ const options = {
   strictQueryParams: true
 };
 
-const router = new Router5(routes, options);
-
+const router = new Router5(routes, options)
+  .usePlugin(loggerPlugin)
+  // .usePlugin(historyPlugin)
+  ;
 // const paths = [
 //   '#about',
 //   '#work',
@@ -67,4 +72,4 @@ const router = new Router5(routes, options);
 //   $('#contact').toggleClass('hidden');
 // });
 
-module.exports = true;
+module.exports = router;
