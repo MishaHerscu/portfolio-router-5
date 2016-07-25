@@ -99,7 +99,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(2);
-	module.exports = __webpack_require__(31);
+	module.exports = __webpack_require__(33);
 
 
 /***/ },
@@ -9931,24 +9931,18 @@
 
 	var Router5 = __webpack_require__(4).default;
 	var loggerPlugin = __webpack_require__(4).loggerPlugin();
-	// const historyPlugin = require('router5-history').default();
+	var historyPlugin = __webpack_require__(14).default();
 
-	var routes = [{ name: 'index', path: '/' }, { name: 'oneSection', path: '/oneSection' }, { name: 'twoSection', path: '/twoSection' }, { name: 'threeSection', path: '/threeSection' }, { name: 'fourSection', path: '/fourSection' }];
+	var routes = [{ name: 'index', path: '/' }, { name: 'About-Me', path: '/About-Me' }, { name: 'Projects', path: '/Projects' }, { name: 'Stuff', path: '/Stuff' }, { name: 'kthxbai', path: '/kthxbai' }];
 
 	var options = {
 	  useHash: true,
 	  hashPrefix: '!',
-	  defaultRoute: 'home',
-	  defaultParams: {},
-	  base: '',
-	  trailingSlash: false,
-	  autoCleanUp: true,
-	  strictQueryParams: true
+	  defaultRoute: '/'
 	};
 
-	var router = new Router5(routes, options).usePlugin(loggerPlugin)
-	// .usePlugin(historyPlugin)
-	;
+	var router = new Router5(routes, options).usePlugin(loggerPlugin).usePlugin(historyPlugin);
+
 	// const paths = [
 	//   '#about',
 	//   '#work',
@@ -11894,8 +11888,202 @@
 	exports.default = loggerPlugin;
 
 /***/ },
-/* 14 */,
-/* 15 */,
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _browser = __webpack_require__(15);
+
+	var _browser2 = _interopRequireDefault(_browser);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var pushState = _browser2.default.pushState;
+	var replaceState = _browser2.default.replaceState;
+	var addPopstateListener = _browser2.default.addPopstateListener;
+	var removePopstateListener = _browser2.default.removePopstateListener;
+	var getLocation = _browser2.default.getLocation;
+	var getBase = _browser2.default.getBase;
+	var getState = _browser2.default.getState;
+
+	var pluginName = 'HISTORY';
+
+	var historyPlugin = function historyPlugin() {
+	    var _ref = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+	    var forceDeactivate = _ref.forceDeactivate;
+	    return function (router) {
+	        router.getLocation = function () {
+	            return getLocation(router.options);
+	        };
+
+	        router.replaceHistoryState = function (name) {
+	            var params = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+	            var state = router.buildState(name, params);
+	            var url = router.buildUrl(name, params);
+	            router.lastKnownState = state;
+	            replaceState(state, '', url);
+	        };
+
+	        var updateBrowserState = function updateBrowserState(state, url, replace) {
+	            if (replace) replaceState(state, '', url);else pushState(state, '', url);
+	        };
+
+	        var onPopState = function onPopState(evt) {
+	            // Do nothing if no state or if last know state is poped state (it should never happen)
+	            var newState = !evt.state || !evt.state.name;
+	            var state = newState ? router.matchPath(getLocation(router.options)) : evt.state;
+	            var _router$options = router.options;
+	            var defaultRoute = _router$options.defaultRoute;
+	            var defaultParams = _router$options.defaultParams;
+
+
+	            if (!state) {
+	                // If current state is already the default route, we will have a double entry
+	                // Navigating back and forth will emit SAME_STATES error
+	                defaultRoute && router.navigate(defaultRoute, defaultParams, { forceDeactivate: forceDeactivate, reload: true, replace: true });
+	                return;
+	            }
+	            if (router.lastKnownState && router.areStatesEqual(state, router.lastKnownState, false)) {
+	                return;
+	            }
+
+	            var fromState = _extends({}, router.getState());
+
+	            router._transition(state, fromState, { forceDeactivate: forceDeactivate }, function (err, toState) {
+	                if (err) {
+	                    if (err.redirect) {
+	                        router.navigate(err.redirect.name, err.redirect.params, { forceDeactivate: forceDeactivate, replace: true });
+	                    } else if (err === 'CANNOT_DEACTIVATE') {
+	                        var url = router.buildUrl(router.lastKnownState.name, router.lastKnownState.params);
+	                        if (!newState) {
+	                            // Keep history state unchanged but use current URL
+	                            updateBrowserState(state, url, true);
+	                        }
+	                        // else do nothing or history will be messed up
+	                        // TODO: history.back()?
+	                    } else {
+	                        // Force navigation to default state
+	                        defaultRoute && router.navigate(defaultRoute, defaultParams, { forceDeactivate: forceDeactivate, reload: true, replace: true });
+	                    }
+	                } else {
+	                    router._invokeListeners('$$success', toState, fromState, { replace: true });
+	                }
+	            });
+	        };
+
+	        var onStart = function onStart() {
+	            // Guess base
+	            if (router.options.useHash && !router.options.base) {
+	                router.options.base = getBase();
+	            }
+	            addPopstateListener(onPopState);
+	        };
+
+	        var onStop = function onStop() {
+	            removePopstateListener(onPopState);
+	        };
+
+	        var onTransitionSuccess = function onTransitionSuccess(toState, fromState, opts) {
+	            var historyState = getState();
+	            var replace = opts.replace || fromState && router.areStatesEqual(toState, fromState, false) || opts.reload && historyState && router.areStatesEqual(toState, historyState, false);
+	            updateBrowserState(toState, router.buildUrl(toState.name, toState.params), replace);
+	        };
+
+	        return { name: pluginName, onStart: onStart, onStop: onStop, onTransitionSuccess: onTransitionSuccess, onPopState: onPopState };
+	    };
+	};
+
+	exports.default = historyPlugin;
+
+/***/ },
+/* 15 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	/**
+	 * Dumb functions
+	 */
+	// istanbul ignore next
+	var identity = function identity(arg) {
+	    return function () {
+	        return arg;
+	    };
+	};
+	// istanbul ignore next
+	var noop = function noop() {};
+
+	/**
+	 * Browser detection
+	 */
+	var isBrowser = typeof window !== 'undefined';
+
+	/**
+	 * Browser functions needed by router5
+	 */
+	var getBase = function getBase() {
+	    return window.location.pathname.replace(/\/$/, '');
+	};
+
+	var pushState = function pushState(state, title, path) {
+	    return window.history.pushState(state, title, path);
+	};
+
+	var replaceState = function replaceState(state, title, path) {
+	    return window.history.replaceState(state, title, path);
+	};
+
+	var addPopstateListener = function addPopstateListener(fn) {
+	    return window.addEventListener('popstate', fn);
+	};
+
+	var removePopstateListener = function removePopstateListener(fn) {
+	    return window.removeEventListener('popstate', fn);
+	};
+
+	var getLocation = function getLocation(opts) {
+	    var path = opts.useHash ? window.location.hash.replace(new RegExp('^#' + opts.hashPrefix), '') : window.location.pathname.replace(new RegExp('^' + opts.base), '');
+	    return (path || '/') + window.location.search;
+	};
+
+	var getState = function getState() {
+	    return window.history.state;
+	};
+
+	/**
+	 * Export browser object
+	 */
+	var browser = {};
+	if (isBrowser) {
+	    browser = { getBase: getBase, pushState: pushState, replaceState: replaceState, addPopstateListener: addPopstateListener, removePopstateListener: removePopstateListener, getLocation: getLocation, getState: getState };
+	} else {
+	    // istanbul ignore next
+	    browser = {
+	        getBase: identity(''),
+	        pushState: noop,
+	        replaceState: noop,
+	        addPopstateListener: noop,
+	        removePopstateListener: noop,
+	        getLocation: identity(''),
+	        getState: identity(null)
+	    };
+	}
+
+	exports.default = browser;
+
+/***/ },
 /* 16 */,
 /* 17 */,
 /* 18 */,
@@ -11911,7 +12099,9 @@
 /* 28 */,
 /* 29 */,
 /* 30 */,
-/* 31 */
+/* 31 */,
+/* 32 */,
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(jQuery) {/*!
